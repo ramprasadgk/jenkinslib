@@ -18,35 +18,12 @@ def call(body) {:wq
           OUTPUT_FOLDER = "publish"
 		  PACKAGE_EXCLUSIONS = " "
         }
-        stages{
-	    stage('check for branch indexing'){
-	    	steps{
-		    scripts{
-		    	if (new JenkinsUtils().isBranchIndexingCause()){ 
-
-                    	    currentBuild.result = 'ABORTED' 
-
-                            error('Trigger caused due to branch indexing, skipping the build...') 
-	                    } 
-		    }
-		}
-
-	    }
+        
             stage('GIT download .NET shared library '){
               	when { expression {  BUILD_TYPE == 'alpha' } }
                 steps{
                     script{
-                        BUILD_RUN = BUILD_NUMBER
-                      if (config.DOTNET_TARGET!=null){
-                        DOTNET_TARGET = config.DOTNET_TARGET
-                        echo "Using this location for the packaging ${DOTNET_TARGET}"
-                        Dotnet_Clone(this)
-                      }
-                      else{
-                        DOTNET_TARGET = ''
-                        echo "Cloning DotNet repo into the root of the workspace"
-                        Dotnet_Clone(this)
-                      }
+                        
                     }
                 }
             }
