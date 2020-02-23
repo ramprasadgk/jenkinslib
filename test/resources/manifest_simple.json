@@ -1,0 +1,5 @@
+{ 
+  "mainSolution": "Main.sln",
+  "solutions": [ "module1/module1.sln", "module2/module2.sln" ],
+  "packages": [ "module1/module1.csproj","module2/module2.csproj"]
+}
