@@ -4,7 +4,9 @@ def call(body) {
     body.delegate = config
     body()
     pipeline {
-        
+	    agent {
+	    	'any'
+	    }
         options {
             disableConcurrentBuilds()
         }
