@@ -1,12 +1,12 @@
 def call(body) {
-    def config = [:]
+  	def config = [:]
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body.delegate = config
     body()
     pipeline {
-	    agent {
-	    	'any'
-	    }
+        agent {
+            any
+        }
         options {
             disableConcurrentBuilds()
         }
@@ -18,25 +18,42 @@ def call(body) {
           OUTPUT_FOLDER = "publish"
 		  PACKAGE_EXCLUSIONS = " "
         }
-        
-            stage('GIT download .NET shared library '){
-              	when { expression {  BUILD_TYPE == 'alpha' } }
+        stages{
+	    stage('check for branch indexing'){
+	    	steps{
+		    scripts{
+		    	if (new JenkinsUtils().isBranchIndexingCause()){ 
+
+                    	    currentBuild.result = 'ABORTED' 
+
+                            error('Trigger caused due to branch indexing, skipping the build...') 
+	                    } 
+		    }
+		}
+		}
+	   
+			stage('Deploying the Application'){
                 steps{
-                    script{
-                        
-                    }
+					script{
+						if (BUILD_TYPE == "alpha"){
+							Octopus_Create_Release(this, APP_NAME, APP_VERSION)
+						}
+						else{
+							Octopus_Deploy(this, APP_NAME, APP_VERSION)
+						}
+					}
                 }
             }
-	   }
+        }
         post {
           unstable {
             script{
                 if (BUILD_TYPE == 'alpha'){
                     Push_Update_Version(this)
-                    //Send_Email(this, config.DEV_DISTRO)
+                    Send_Email(this, config.DEV_DISTRO)
                 }
                 if (BUILD_TYPE == 'beta' || BUILD_TYPE == 'prod'){
-                    //Send_Email(this, config.TEAM_DISTRO)
+                    Send_Email(this, config.TEAM_DISTRO)
                 }
                 if (!(BRANCH_NAME =~ /prod.*/)){
                     Create_Branch(this)
@@ -48,10 +65,11 @@ def call(body) {
           success {
             script{
                 if (BUILD_TYPE == 'alpha'){
-                    //Send_Email(this, config.DEV_DISTRO)
+                  	Push_Update_Version(this)
+                    Send_Email(this, config.DEV_DISTRO)
                 }
                 if (BUILD_TYPE == 'beta' || BUILD_TYPE == 'prod'){
-                    //Send_Email(this, config.TEAM_DISTRO)
+                    Send_Email(this, config.TEAM_DISTRO)
                 }
                 if (!(BRANCH_NAME =~ /prod.*/)){
                     Create_Branch(this)
@@ -63,14 +81,14 @@ def call(body) {
           failure {
             script{
                 if (BUILD_TYPE == 'alpha'){
-                    //Send_Email(this, config.DEV_DISTRO)
+                    Send_Email(this, config.DEV_DISTRO)
                 }
                 if (BUILD_TYPE == 'beta' || BUILD_TYPE == 'prod'){
-                    //Send_Email(this, config.TEAM_DISTRO)
+                    Send_Email(this, config.TEAM_DISTRO)
                 }
               	cleanWs()
             }
           }
         }
     }
-
+}
